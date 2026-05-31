@@ -1,0 +1,1226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Arivan Thavapalan · Drive My Journey</title>
+<meta name="description" content="DevOps Engineer portfolio — drive across the world to explore my career journey from Jaffna to Europe.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.css" />
+<style>
+:root {
+  --ink: #042C53;
+  --paper: #FAFBFE;
+  --line: #B5D4F4;
+  --stamp: #185FA5;
+  --stamp-light: #E6F1FB;
+  --muted: #6B7280;
+  --border: #E5EAF2;
+  --home: #D85A30;
+  --future: #1D9E75;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  font-family: 'Inter', sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  line-height: 1.6;
+  font-size: 15px;
+  height: 100vh;
+  overflow: hidden;
+}
+a { color: var(--stamp); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+#map {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  z-index: 1;
+  background: #E6F1FB;
+}
+.leaflet-container { background: #E6F1FB !important; font-family: 'Inter', sans-serif !important; }
+
+/* ============ INTRO OVERLAY ============ */
+.intro-overlay {
+  position: absolute;
+  top: 24px;
+  left: 24px;
+  z-index: 1000;
+  background: rgba(255,255,255,0.96);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 20px 24px;
+  max-width: 320px;
+  box-shadow: 0 4px 24px rgba(4, 44, 83, 0.08);
+}
+.intro-label {
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: var(--stamp);
+  text-transform: uppercase;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+.intro-name {
+  font-family: 'DM Serif Display', serif;
+  font-size: 28px;
+  color: var(--ink);
+  letter-spacing: -0.5px;
+  line-height: 1.1;
+  margin-bottom: 6px;
+}
+.intro-tagline {
+  font-size: 13px;
+  color: var(--stamp);
+  margin-bottom: 12px;
+}
+.intro-desc {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+/* ============ SIDE MENU ============ */
+.side-menu {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  z-index: 1000;
+  background: rgba(255,255,255,0.96);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 4px 24px rgba(4, 44, 83, 0.08);
+  min-width: 200px;
+}
+.side-menu-title {
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: var(--stamp);
+  text-transform: uppercase;
+  font-weight: 500;
+  margin-bottom: 12px;
+  padding: 0 8px;
+}
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink);
+  transition: all 0.15s;
+}
+.menu-item:hover {
+  background: var(--stamp-light);
+  color: var(--stamp);
+}
+.menu-item .menu-icon {
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.menu-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 8px 0;
+}
+
+.contact-row {
+  display: flex;
+  gap: 6px;
+  padding: 0 8px;
+  margin-top: 8px;
+}
+.contact-icon-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--stamp);
+  font-size: 11px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.15s;
+}
+.contact-icon-btn:hover {
+  background: var(--stamp);
+  color: white;
+  text-decoration: none;
+  border-color: var(--stamp);
+}
+
+/* ============ CONTROLS CARD ============ */
+.controls-card {
+  position: absolute;
+  bottom: 24px;
+  left: 24px;
+  z-index: 1000;
+  background: rgba(255,255,255,0.96);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px 18px;
+  font-size: 12px;
+}
+.controls-title {
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: var(--stamp);
+  text-transform: uppercase;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+.controls-grid {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.key-group { display: flex; align-items: center; gap: 6px; }
+.key {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 26px;
+  padding: 0 6px;
+  background: var(--paper);
+  border: 1.5px solid var(--border);
+  border-bottom-width: 3px;
+  border-radius: 5px;
+  font-family: monospace;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.key-label { color: var(--muted); font-size: 11px; }
+
+/* ============ PROXIMITY HINT ============ */
+.proximity-hint {
+  position: absolute;
+  bottom: 24px;
+  right: 24px;
+  z-index: 1000;
+  background: var(--ink);
+  color: white;
+  padding: 12px 20px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 500;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: all 0.3s;
+  pointer-events: none;
+  box-shadow: 0 4px 16px rgba(4, 44, 83, 0.2);
+}
+.proximity-hint.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.proximity-hint kbd {
+  background: rgba(255,255,255,0.2);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 11px;
+  margin: 0 4px;
+}
+
+/* ============ MOBILE CONTROLS ============ */
+.mobile-controls {
+  position: absolute;
+  bottom: 24px;
+  right: 24px;
+  z-index: 1100;
+  display: none;
+  user-select: none;
+  touch-action: none;
+}
+.mobile-pad {
+  display: grid;
+  grid-template-columns: 50px 50px 50px;
+  grid-template-rows: 50px 50px 50px;
+  gap: 4px;
+}
+.mobile-btn {
+  width: 50px;
+  height: 50px;
+  background: rgba(255,255,255,0.96);
+  border: 1.5px solid var(--line);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  color: var(--stamp);
+  cursor: pointer;
+}
+.mobile-btn:active { background: var(--stamp); color: white; }
+.mobile-btn.up { grid-column: 2; grid-row: 1; }
+.mobile-btn.left { grid-column: 1; grid-row: 2; }
+.mobile-btn.right { grid-column: 3; grid-row: 2; }
+.mobile-btn.down { grid-column: 2; grid-row: 3; }
+.mobile-btn.enter {
+  grid-column: 2; grid-row: 2;
+  background: var(--stamp);
+  color: white;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* ============ CAR & PINS ============ */
+.car-icon {
+  width: 32px;
+  height: 32px;
+  position: relative;
+  transition: transform 0.1s linear;
+  filter: drop-shadow(0 2px 4px rgba(4, 44, 83, 0.3));
+}
+.car-svg { width: 100%; height: 100%; }
+
+.custom-pin { background: transparent !important; border: none !important; }
+.pin-wrapper {
+  position: relative;
+  width: 50px;
+  height: 60px;
+  cursor: pointer;
+}
+.pin-dot {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--stamp);
+  border: 3px solid white;
+  box-shadow: 0 2px 8px rgba(4, 44, 83, 0.25);
+  transition: all 0.3s;
+}
+.pin-dot.home { background: var(--home); width: 22px; height: 22px; }
+.pin-dot.future { background: var(--future); }
+.pin-dot.near {
+  transform: translateX(-50%) scale(1.4);
+  box-shadow: 0 0 0 8px rgba(24, 95, 165, 0.2), 0 2px 8px rgba(4, 44, 83, 0.25);
+}
+.pin-pulse {
+  position: absolute;
+  top: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(24, 95, 165, 0.3);
+  animation: pinPulse 2s infinite;
+}
+.pin-pulse.home { background: rgba(216, 90, 48, 0.3); }
+.pin-pulse.future { background: rgba(29, 158, 117, 0.3); }
+@keyframes pinPulse {
+  0% { transform: translateX(-50%) scale(0.8); opacity: 0.6; }
+  100% { transform: translateX(-50%) scale(2); opacity: 0; }
+}
+.pin-label {
+  position: absolute;
+  top: 26px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--ink);
+  white-space: nowrap;
+  box-shadow: 0 2px 6px rgba(4, 44, 83, 0.1);
+}
+
+/* ============ MODAL ============ */
+.section-modal {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.95);
+  z-index: 2000;
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  width: 90%;
+  max-width: 720px;
+  max-height: 85vh;
+  overflow-y: auto;
+  padding: 40px;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.3s;
+  box-shadow: 0 20px 60px rgba(4, 44, 83, 0.2);
+}
+.section-modal.active {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(-50%, -50%) scale(1);
+}
+.modal-overlay {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(4, 44, 83, 0.4);
+  backdrop-filter: blur(4px);
+  z-index: 1500;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+.modal-overlay.active { opacity: 1; pointer-events: auto; }
+.modal-close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 18px;
+  color: var(--muted);
+  transition: all 0.2s;
+}
+.modal-close:hover { background: var(--stamp); color: white; border-color: var(--stamp); }
+.modal-eyebrow {
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: var(--stamp);
+  text-transform: uppercase;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+.modal-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: 32px;
+  color: var(--ink);
+  letter-spacing: -0.5px;
+  margin-bottom: 24px;
+}
+.modal-body p {
+  margin-bottom: 14px;
+  color: #2C3E50;
+  line-height: 1.7;
+}
+
+.timeline-item {
+  border-left: 2px solid var(--line);
+  padding-left: 20px;
+  margin-bottom: 24px;
+  position: relative;
+}
+.timeline-item::before {
+  content: '';
+  position: absolute;
+  left: -7px; top: 6px;
+  width: 12px; height: 12px;
+  background: var(--stamp);
+  border: 2px solid white;
+  border-radius: 50%;
+}
+.timeline-period {
+  font-size: 11px;
+  color: var(--stamp);
+  font-weight: 500;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.timeline-role { font-size: 17px; font-weight: 500; color: var(--ink); }
+.timeline-company { font-size: 14px; color: var(--stamp); margin-bottom: 10px; }
+.timeline-bullets { list-style: none; font-size: 14px; }
+.timeline-bullets li {
+  padding-left: 18px;
+  position: relative;
+  margin-bottom: 6px;
+  color: #2C3E50;
+}
+.timeline-bullets li::before { content: '→'; position: absolute; left: 0; color: var(--stamp); }
+
+.project-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+.project-card { background: var(--paper); border: 1px solid var(--border); border-radius: 10px; padding: 18px; }
+.project-card h4 { font-size: 16px; font-weight: 500; color: var(--ink); margin-bottom: 6px; }
+.project-tags { font-size: 11px; color: var(--muted); margin-bottom: 10px; }
+.project-card p { font-size: 13px; color: #4A5568; margin-bottom: 12px; }
+
+.skill-group { margin-bottom: 20px; }
+.skill-group h4 {
+  font-size: 12px;
+  letter-spacing: 1px;
+  color: var(--stamp);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+.skill-pills { display: flex; flex-wrap: wrap; gap: 6px; }
+.skill-pills span {
+  background: var(--stamp-light);
+  color: var(--stamp);
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+.fact-list { list-style: none; font-size: 14px; }
+.fact-list li {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+}
+.fact-list li:last-child { border-bottom: none; }
+.fact-list li span:first-child { color: var(--muted); }
+
+.cert-item {
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.cert-status {
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-weight: 500;
+  padding: 3px 10px;
+  border-radius: 12px;
+  background: var(--stamp-light);
+  color: var(--stamp);
+}
+
+/* ============ MOBILE LAYOUT ============ */
+@media (max-width: 768px) {
+  .mobile-controls { display: block; }
+  .controls-card { display: none; }
+  .intro-overlay { max-width: calc(100% - 48px); padding: 14px 18px; top: 16px; left: 16px; }
+  .intro-name { font-size: 22px; }
+  .side-menu { top: 16px; right: 16px; padding: 8px; min-width: 140px; }
+  .side-menu-title { font-size: 10px; padding: 4px 6px; margin-bottom: 6px; }
+  .menu-item { font-size: 13px; padding: 8px 10px; }
+  .contact-row { padding: 0 4px; gap: 4px; }
+  .contact-icon-btn { font-size: 10px; height: 28px; }
+  .section-modal { padding: 24px; max-height: 90vh; }
+  .modal-title { font-size: 24px; }
+  .proximity-hint { left: 16px; right: auto; bottom: 200px; }
+}
+</style>
+</head>
+<body>
+
+<div id="map"></div>
+
+<div class="intro-overlay">
+  <div class="intro-label">Drive my journey</div>
+  <div class="intro-name">Arivan Thavapalan</div>
+  <div class="intro-tagline">DevOps Engineer · Cloud Infrastructure</div>
+  <div class="intro-desc">Drive the car across the map to explore my career — from Jaffna heading to Europe. Use the menu on the right for skills, projects, and more.</div>
+</div>
+
+<div class="side-menu">
+  <div class="side-menu-title">Portfolio</div>
+  <button class="menu-item" data-content="about">
+    <span class="menu-icon">●</span>About me
+  </button>
+  <button class="menu-item" data-content="experience">
+    <span class="menu-icon">▤</span>Experience
+  </button>
+  <button class="menu-item" data-content="projects">
+    <span class="menu-icon">◆</span>Projects
+  </button>
+  <button class="menu-item" data-content="skills">
+    <span class="menu-icon">◈</span>Skills
+  </button>
+  <button class="menu-item" data-content="certifications">
+    <span class="menu-icon">▣</span>Certifications
+  </button>
+  <div class="menu-divider"></div>
+  <div class="contact-row">
+    <a href="mailto:arivanthavapalan@gmail.com" class="contact-icon-btn">Email</a>
+    <a href="https://github.com/Arivan199" target="_blank" class="contact-icon-btn">GitHub</a>
+    <a href="https://linkedin.com/in/arivan-thavapalan" target="_blank" class="contact-icon-btn">LinkedIn</a>
+  </div>
+</div>
+
+<div class="controls-card">
+  <div class="controls-title">Controls</div>
+  <div class="controls-grid">
+    <div class="key-group">
+      <span class="key">↑</span><span class="key">←</span><span class="key">↓</span><span class="key">→</span>
+      <span class="key-label">Drive</span>
+    </div>
+    <div class="key-group">
+      <span class="key">Enter</span>
+      <span class="key-label">Visit</span>
+    </div>
+  </div>
+</div>
+
+<div class="mobile-controls">
+  <div class="mobile-pad">
+    <div class="mobile-btn up" data-key="ArrowUp">↑</div>
+    <div class="mobile-btn left" data-key="ArrowLeft">←</div>
+    <div class="mobile-btn enter" data-key="Enter">GO</div>
+    <div class="mobile-btn right" data-key="ArrowRight">→</div>
+    <div class="mobile-btn down" data-key="ArrowDown">↓</div>
+  </div>
+</div>
+
+<div class="proximity-hint" id="hint">
+  Press <kbd>Enter</kbd> or tap <kbd>GO</kbd> to visit <span id="hintCity"></span>
+</div>
+
+<div class="modal-overlay" id="overlay"></div>
+
+<div class="section-modal" id="modal">
+  <button class="modal-close" id="closeBtn">×</button>
+  <div id="modalContent"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.js"></script>
+<script>
+function bootApp() {
+  if (typeof L === 'undefined') {
+    document.body.insertAdjacentHTML('afterbegin',
+      '<div style="position:fixed;top:24px;left:50%;transform:translateX(-50%);background:#fff;border:1px solid #B5D4F4;border-radius:12px;padding:16px 24px;z-index:9999;font-family:Inter,sans-serif;color:#042C53;box-shadow:0 4px 16px rgba(0,0,0,0.1)">Map library failed to load. Please check your internet connection and refresh.</div>'
+    );
+    return;
+  }
+
+const cities = {
+  jaffna: {
+    city: 'Jaffna, Sri Lanka',
+    eyebrow: 'Origin',
+    title: 'Where the story starts',
+    coords: [9.6615, 80.0255],
+    type: 'home',
+    label: 'Jaffna (Home)',
+    content: `
+      <p>My story begins in Jaffna, on the northern tip of Sri Lanka. It's where I was born, raised, and where my family roots run deep.</p>
+      <p>Growing up in Jaffna shaped how I think. The city carries a long, complicated history — and yet life there continues with quiet resilience. People rebuild, adapt, find ways to make things work. That mindset travels with me into how I approach engineering: pragmatic, patient, and resourceful.</p>
+      <p>Jaffna is also where I got my first taste of computers — long evenings at home, exploring Linux distributions, breaking things, fixing them, and slowly learning that infrastructure was where I belonged.</p>
+    `
+  },
+  trichy: {
+    city: 'Tiruchirappalli, India',
+    eyebrow: 'College years',
+    title: 'NIT — building foundations',
+    coords: [10.7905, 78.7047],
+    type: 'past',
+    label: 'NIT Trichy',
+    content: `
+      <p>From Jaffna I moved to Tiruchirappalli for engineering school at the National Institute of Technology — one of India's most respected engineering institutions. Four years here shaped almost everything about how I think as an engineer today.</p>
+      <div class="timeline-item">
+        <div class="timeline-period">Jul 2019 — May 2023</div>
+        <div class="timeline-role">Bachelor of Technology · Computer Science</div>
+        <div class="timeline-company">National Institute of Technology · Tiruchirappalli, India</div>
+        <ul class="timeline-bullets">
+          <li>Graduated with CGPA 8.21/10</li>
+          <li>Spent four years on Linux across distributions — Ubuntu, CentOS, Kali</li>
+          <li>Built and broke many systems — the kind of learning that doesn't happen in textbooks</li>
+          <li>Found a deep love for infrastructure, networking, and systems that scale</li>
+        </ul>
+      </div>
+    `
+  },
+  bangalore: {
+    city: 'Bangalore, India',
+    eyebrow: 'First chapter',
+    title: 'Samsung Research — getting started',
+    coords: [12.9716, 77.5946],
+    type: 'past',
+    label: 'Bangalore',
+    content: `
+      <p>My first professional chapter took me to Bangalore for a research internship at Samsung Research Institute as part of their PRISM program.</p>
+      <div class="timeline-item">
+        <div class="timeline-period">Sep 2021 — Feb 2022</div>
+        <div class="timeline-role">PRISM Research Internship</div>
+        <div class="timeline-company">Samsung Research Institute · Bangalore, India</div>
+        <ul class="timeline-bullets">
+          <li>Research focused on deep learning model development for image processing workflows</li>
+          <li>Achieved 95% accuracy in 3D rendering output models</li>
+          <li>First exposure to applied research environments and reproducible experimentation</li>
+        </ul>
+      </div>
+      <p>This was where I first realised I was drawn to infrastructure and reproducibility more than to the model layer itself.</p>
+    `
+  },
+  pune: {
+    city: 'Pune, India',
+    eyebrow: 'Currently',
+    title: 'Schlumberger — where the work happens',
+    coords: [18.5204, 73.8567],
+    type: 'past',
+    label: 'Pune (Current)',
+    content: `
+      <p>I'm currently based in Pune, working at Schlumberger as a DevOps engineer on Azure cloud platform infrastructure. This is where my career has grown the most.</p>
+      <div class="timeline-item">
+        <div class="timeline-period">Jul 2023 — Present</div>
+        <div class="timeline-role">Software Engineer · DevOps / Cloud Platform</div>
+        <div class="timeline-company">Schlumberger · Pune, India</div>
+        <ul class="timeline-bullets">
+          <li>Led deployment of file management platform on Azure Kubernetes for 400+ enterprise clients</li>
+          <li>Delivered $700K in annual cloud cost savings through cluster optimisation and FinOps practices</li>
+          <li>Designed secure network architecture using Azure Application Gateway, Front Door, WAF, Private Endpoints, and Private Link</li>
+          <li>Refactored CI/CD pipelines reducing manual deployment effort by 90%</li>
+          <li>Built end-to-end DevOps for Carbon Emission Monitoring Dashboard with full automated deployment</li>
+        </ul>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-period">May 2022 — Jul 2022</div>
+        <div class="timeline-role">Software Engineer Intern</div>
+        <div class="timeline-company">Schlumberger · Pune, India</div>
+        <ul class="timeline-bullets">
+          <li>Developed Data Ingestion Stats Monitoring Dashboard reducing client query resolution time by 90%</li>
+        </ul>
+      </div>
+    `
+  },
+  berlin: {
+    city: 'Berlin, Germany',
+    eyebrow: 'Next destination',
+    title: 'Berlin — Europe ahead',
+    coords: [52.5200, 13.4050],
+    type: 'future',
+    label: 'Berlin (Next)',
+    content: `
+      <p>Berlin is at the top of my next-destination list. The combination of a thriving DevOps ecosystem, English-first engineering culture, strong startup scene, and central European location makes it where I want to build the next chapter of my career.</p>
+      <p>I'm actively interviewing with Berlin-based companies — AI startups, established scale-ups, and infrastructure-focused organisations. Berlin's appetite for engineers who can run cloud infrastructure at scale matches exactly what I've been building for the past three years.</p>
+      <h4 style="margin-top:24px;font-size:13px;letter-spacing:1px;color:var(--stamp);text-transform:uppercase;font-weight:500;margin-bottom:12px">Why Berlin</h4>
+      <ul class="fact-list">
+        <li><span>Tech ecosystem</span><span>Top 3 in Europe</span></li>
+        <li><span>Working language</span><span>English-first</span></li>
+        <li><span>Visa pathway</span><span>EU Blue Card</span></li>
+        <li><span>Cost of living</span><span>Reasonable for tech salaries</span></li>
+      </ul>
+    `
+  },
+  amsterdam: {
+    city: 'Amsterdam, Netherlands',
+    eyebrow: 'Next destination',
+    title: 'Amsterdam — international hub',
+    coords: [52.3676, 4.9041],
+    type: 'future',
+    label: 'Amsterdam (Next)',
+    content: `
+      <p>The Netherlands is a strong pin on my European map. Amsterdam in particular has become a quiet powerhouse for cloud infrastructure work — Booking.com, Adyen, Mollie, and dozens of scale-ups operate at the kind of infrastructure scale where my skills directly apply.</p>
+      <p>What draws me to the Netherlands is the practical engineering culture, the high English fluency, and the strong tech-worker visa pathways for international candidates.</p>
+      <h4 style="margin-top:24px;font-size:13px;letter-spacing:1px;color:var(--stamp);text-transform:uppercase;font-weight:500;margin-bottom:12px">Why Netherlands</h4>
+      <ul class="fact-list">
+        <li><span>Tech hub</span><span>Amsterdam · Utrecht · Eindhoven</span></li>
+        <li><span>Working language</span><span>English universal</span></li>
+        <li><span>Visa pathway</span><span>Highly Skilled Migrant</span></li>
+        <li><span>30% ruling</span><span>Tax benefit for expats</span></li>
+      </ul>
+    `
+  },
+  munich: {
+    city: 'Munich, Germany',
+    eyebrow: 'Next destination',
+    title: 'Munich — German engineering hub',
+    coords: [48.1351, 11.5820],
+    type: 'future',
+    label: 'Munich (Next)',
+    content: `
+      <p>Munich is the second German city on my map. Known as the heart of German engineering, Munich hosts headquarters for BMW, Siemens, Allianz, and a growing ecosystem of cloud-native startups and scale-ups.</p>
+      <p>What draws me to Munich is the depth of enterprise infrastructure work happening there — from automotive software platforms to industrial IoT — combined with strong international talent communities and excellent quality of life in the heart of Bavaria.</p>
+      <h4 style="margin-top:24px;font-size:13px;letter-spacing:1px;color:var(--stamp);text-transform:uppercase;font-weight:500;margin-bottom:12px">Why Munich</h4>
+      <ul class="fact-list">
+        <li><span>Tech ecosystem</span><span>Enterprise + scale-ups</span></li>
+        <li><span>Major employers</span><span>BMW · Siemens · Allianz</span></li>
+        <li><span>Visa pathway</span><span>EU Blue Card</span></li>
+        <li><span>Quality of life</span><span>Top-ranked in Europe</span></li>
+      </ul>
+    `
+  },
+  paris: {
+    city: 'Paris, France',
+    eyebrow: 'Next destination',
+    title: 'Paris — European capital of AI',
+    coords: [48.8566, 2.3522],
+    type: 'future',
+    label: 'Paris (Next)',
+    content: `
+      <p>Paris has emerged as Europe's AI capital — home to Mistral, Hugging Face, and a thriving cloud infrastructure ecosystem. Beyond AI, Paris hosts strong fintech, cybersecurity, and cloud-native scale-ups across the city.</p>
+      <p>The French Tech Visa makes Paris one of the more accessible European destinations for skilled non-EU engineers. The combination of cutting-edge engineering work and Paris itself makes this a genuinely exciting destination.</p>
+      <h4 style="margin-top:24px;font-size:13px;letter-spacing:1px;color:var(--stamp);text-transform:uppercase;font-weight:500;margin-bottom:12px">Why Paris</h4>
+      <ul class="fact-list">
+        <li><span>Tech focus</span><span>AI · Fintech · Cybersecurity</span></li>
+        <li><span>Major scale-ups</span><span>Mistral · Hugging Face · Stoïk</span></li>
+        <li><span>Visa pathway</span><span>French Tech Visa</span></li>
+        <li><span>Working language</span><span>English in tech</span></li>
+      </ul>
+    `
+  },
+  oslo: {
+    city: 'Oslo, Norway',
+    eyebrow: 'Next destination',
+    title: 'Oslo — Nordic engineering',
+    coords: [59.9139, 10.7522],
+    type: 'future',
+    label: 'Oslo (Next)',
+    content: `
+      <p>Oslo represents the Nordic engineering culture I'm increasingly drawn to — high trust, deep technical rigour, strong work-life balance, and an environment where engineers are valued as long-term contributors rather than short-term resources.</p>
+      <p>Norway's tech scene punches well above its weight. From Schibsted to Cognite to Kahoot, Oslo-based companies operate cloud infrastructure at serious scale while maintaining the famously sustainable Nordic working culture.</p>
+      <h4 style="margin-top:24px;font-size:13px;letter-spacing:1px;color:var(--stamp);text-transform:uppercase;font-weight:500;margin-bottom:12px">Why Oslo</h4>
+      <ul class="fact-list">
+        <li><span>Engineering culture</span><span>High trust · deep rigour</span></li>
+        <li><span>Major employers</span><span>Schibsted · Cognite · Kahoot</span></li>
+        <li><span>Visa pathway</span><span>Skilled Worker Permit</span></li>
+        <li><span>Work-life balance</span><span>Nordic standard</span></li>
+      </ul>
+    `
+  }
+};
+
+const menuContent = {
+  about: {
+    eyebrow: 'About me',
+    title: 'The traveller',
+    content: `
+      <p>I'm a DevOps Engineer who treats infrastructure the way I treat travel — every system has a story, every architecture decision is a route choice, and the best engineering happens when you understand both where you've been and where you're heading.</p>
+      <p>Originally from Jaffna in northern Sri Lanka, I moved to India for engineering school at NIT Tiruchirappalli, then worked through internships at Samsung Research before settling into my current role at Schlumberger in Pune. Three years there have given me deep production experience with Azure Kubernetes, Terraform, and CI/CD at enterprise scale.</p>
+      <p>Outside of work, I collect places the way some collect stamps. Geography fascinates me — how landscapes shape culture, how borders shape opportunity, and how the same problem looks different depending on where you stand. That same curiosity is what's drawing me toward Europe now.</p>
+      <h4 style="margin-top:24px;font-size:13px;letter-spacing:1px;color:var(--stamp);text-transform:uppercase;font-weight:500;margin-bottom:12px">Quick Facts</h4>
+      <ul class="fact-list">
+        <li><span>From</span><span>Jaffna, Sri Lanka</span></li>
+        <li><span>Currently in</span><span>Pune, India</span></li>
+        <li><span>Experience</span><span>3 years in DevOps</span></li>
+        <li><span>Languages</span><span>Tamil · English · German A1</span></li>
+        <li><span>Open to</span><span>Germany or Netherlands</span></li>
+      </ul>
+    `
+  },
+  experience: {
+    eyebrow: 'Career journey',
+    title: 'Where I have been',
+    content: `
+      <div class="timeline-item">
+        <div class="timeline-period">Jul 2023 — Present</div>
+        <div class="timeline-role">Software Engineer · DevOps / Cloud Platform</div>
+        <div class="timeline-company">Schlumberger · Pune, India</div>
+        <ul class="timeline-bullets">
+          <li>Led deployment of file management platform on Azure Kubernetes for 400+ enterprise clients</li>
+          <li>Delivered $700K in annual cloud cost savings through cluster optimisation and FinOps practices</li>
+          <li>Designed secure network architecture using Azure Application Gateway, Front Door, WAF, Private Endpoints, and Private Link</li>
+          <li>Refactored CI/CD pipelines reducing manual deployment effort by 90%</li>
+          <li>Built end-to-end DevOps for Carbon Emission Monitoring Dashboard with full automated deployment</li>
+        </ul>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-period">May 2022 — Jul 2022</div>
+        <div class="timeline-role">Software Engineer Intern</div>
+        <div class="timeline-company">Schlumberger · Pune, India</div>
+        <ul class="timeline-bullets">
+          <li>Developed Data Ingestion Stats Monitoring Dashboard reducing client query resolution time by 90%</li>
+        </ul>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-period">Sep 2021 — Feb 2022</div>
+        <div class="timeline-role">PRISM Research Internship</div>
+        <div class="timeline-company">Samsung Research Institute · Bangalore, India</div>
+        <ul class="timeline-bullets">
+          <li>Research focused on deep learning model development for image processing</li>
+          <li>Achieved 95% accuracy in 3D rendering output models</li>
+        </ul>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-period">Jul 2019 — May 2023</div>
+        <div class="timeline-role">B.Tech Computer Science</div>
+        <div class="timeline-company">NIT Tiruchirappalli · India</div>
+        <ul class="timeline-bullets">
+          <li>Graduated CGPA 8.21/10</li>
+          <li>Four years deep on Linux across Ubuntu, CentOS, and Kali distributions</li>
+        </ul>
+      </div>
+    `
+  },
+  projects: {
+    eyebrow: 'Side projects',
+    title: 'What I build outside work',
+    content: `
+      <p>Beyond my work at Schlumberger, I build things on the side. These projects reflect different curiosities — from full-stack applications to ML experimentation.</p>
+      <div class="project-grid">
+        <div class="project-card">
+          <h4>Library Management System</h4>
+          <div class="project-tags">MERN · Azure · Terraform</div>
+          <p>Full-stack LMS deployed on Azure App Services with Terraform IaC. Real-time tracking of 10,000+ inventories with 99% uptime.</p>
+          <a href="https://github.com/Arivan199" target="_blank" style="font-size:13px;font-weight:500">View on GitHub →</a>
+        </div>
+        <div class="project-card">
+          <h4>Twitter Sentiment Analysis</h4>
+          <div class="project-tags">Python · ML · NLP</div>
+          <p>Sentiment classification model for Twitter data with feature extraction and visualization.</p>
+          <a href="https://github.com/Arivan199/Twitter-Sentiment-Analysis" target="_blank" style="font-size:13px;font-weight:500">View on GitHub →</a>
+        </div>
+        <div class="project-card">
+          <h4>Web Scraping Library</h4>
+          <div class="project-tags">Python · Documentation</div>
+          <p>Python toolkit for documentation scraping with structured data extraction patterns.</p>
+          <a href="https://github.com/Arivan199/Python-Web-Scrap-Documentation" target="_blank" style="font-size:13px;font-weight:500">View on GitHub →</a>
+        </div>
+        <div class="project-card">
+          <h4>dbyt</h4>
+          <div class="project-tags">Python</div>
+          <p>Personal Python utility project exploring data processing patterns.</p>
+          <a href="https://github.com/Arivan199/dbyt" target="_blank" style="font-size:13px;font-weight:500">View on GitHub →</a>
+        </div>
+      </div>
+    `
+  },
+  skills: {
+    eyebrow: 'Technical kit',
+    title: 'What I work with',
+    content: `
+      <p>Three years of production work has shaped a stack I know deeply, plus areas where I'm actively expanding.</p>
+      <div class="skill-group">
+        <h4>Container Orchestration</h4>
+        <div class="skill-pills"><span>Kubernetes</span><span>AKS</span><span>Docker</span><span>Helm</span></div>
+      </div>
+      <div class="skill-group">
+        <h4>Infrastructure as Code</h4>
+        <div class="skill-pills"><span>Terraform</span><span>ARM Templates</span></div>
+      </div>
+      <div class="skill-group">
+        <h4>CI/CD</h4>
+        <div class="skill-pills"><span>Azure DevOps</span><span>GitHub Actions</span><span>Git</span></div>
+      </div>
+      <div class="skill-group">
+        <h4>Cloud Platforms</h4>
+        <div class="skill-pills"><span>Azure (AZ-104)</span><span>GCP</span></div>
+      </div>
+      <div class="skill-group">
+        <h4>Networking & Security</h4>
+        <div class="skill-pills"><span>Application Gateway</span><span>Front Door</span><span>WAF</span><span>Private Endpoints</span><span>Private Link</span></div>
+      </div>
+      <div class="skill-group">
+        <h4>Observability</h4>
+        <div class="skill-pills"><span>Prometheus</span><span>Azure Monitor</span><span>Log Analytics</span><span>Elasticsearch</span></div>
+      </div>
+      <div class="skill-group">
+        <h4>Backend & Scripting</h4>
+        <div class="skill-pills"><span>Golang</span><span>Java · Spring Boot</span><span>Bash</span><span>Python</span></div>
+      </div>
+      <div class="skill-group">
+        <h4>AI Workflows</h4>
+        <div class="skill-pills"><span>Cursor</span><span>Claude</span><span>MCP integrations</span></div>
+      </div>
+    `
+  },
+  certifications: {
+    eyebrow: 'Travel documents',
+    title: 'Certifications',
+    content: `
+      <p>Formal validation of skills built through real production work. Always learning, always validating.</p>
+      <div class="cert-item">
+        <div>
+          <div style="font-weight:500;color:var(--ink);font-size:14px">AZ-104 Azure Administrator Associate</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px">Microsoft</div>
+        </div>
+        <span class="cert-status">Active</span>
+      </div>
+      <div class="cert-item">
+        <div>
+          <div style="font-weight:500;color:var(--ink);font-size:14px">Architecting with Google Cloud Compute Engine</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px">Google Cloud Career Readiness Program</div>
+        </div>
+        <span class="cert-status">Active</span>
+      </div>
+      <div class="cert-item">
+        <div>
+          <div style="font-weight:500;color:var(--ink);font-size:14px">Azure AI Fundamentals</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px">Microsoft</div>
+        </div>
+        <span class="cert-status">Active</span>
+      </div>
+      <div class="cert-item">
+        <div>
+          <div style="font-weight:500;color:var(--ink);font-size:14px">Terraform Associate 004</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px">HashiCorp</div>
+        </div>
+        <span class="cert-status">In Progress</span>
+      </div>
+      <div class="cert-item">
+        <div>
+          <div style="font-weight:500;color:var(--ink);font-size:14px">CKA — Certified Kubernetes Administrator</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px">Linux Foundation</div>
+        </div>
+        <span class="cert-status">Planned</span>
+      </div>
+      <p style="margin-top:20px;font-size:13px;color:var(--muted)">Building toward a long-term DevSecOps career — combining Kubernetes administration with cloud security specialisation.</p>
+    `
+  }
+};
+
+const map = L.map('map', {
+  center: [30, 50],
+  zoom: 3,
+  minZoom: 2,
+  maxZoom: 8,
+  zoomControl: true,
+  scrollWheelZoom: true,
+  worldCopyJump: true,
+  keyboard: false
+});
+
+L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+  attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+  subdomains: 'abcd',
+  maxZoom: 19
+}).addTo(map);
+
+const pinMarkers = {};
+Object.entries(cities).forEach(([key, section]) => {
+  const typeClass = section.type === 'home' ? 'home' : (section.type === 'future' ? 'future' : '');
+  const pinHtml = `
+    <div class="pin-wrapper" data-section="${key}">
+      <div class="pin-pulse ${typeClass}"></div>
+      <div class="pin-dot ${typeClass}" id="pin-${key}"></div>
+      <div class="pin-label">${section.label}</div>
+    </div>
+  `;
+  const icon = L.divIcon({
+    html: pinHtml,
+    className: 'custom-pin',
+    iconSize: [50, 60],
+    iconAnchor: [25, 10]
+  });
+  const marker = L.marker(section.coords, { icon }).addTo(map);
+  marker.on('click', () => openCity(key));
+  pinMarkers[key] = marker;
+});
+
+const journeyPath = [cities.jaffna.coords, cities.trichy.coords, cities.bangalore.coords, cities.pune.coords];
+const futurePath = [cities.pune.coords, cities.berlin.coords, cities.amsterdam.coords, cities.munich.coords, cities.paris.coords, cities.oslo.coords];
+
+L.polyline(journeyPath, { color: '#185FA5', weight: 1.5, opacity: 0.5, dashArray: '6 8' }).addTo(map);
+L.polyline(futurePath, { color: '#1D9E75', weight: 1.5, opacity: 0.5, dashArray: '6 8' }).addTo(map);
+
+const carIcon = L.divIcon({
+  html: `<div class="car-icon" id="carIcon">
+    <svg class="car-svg" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="16" cy="28" rx="10" ry="2" fill="rgba(0,0,0,0.15)"/>
+      <rect x="6" y="13" width="20" height="11" rx="3" fill="#D85A30" stroke="#042C53" stroke-width="0.8"/>
+      <rect x="9" y="9" width="14" height="6" rx="2" fill="#D85A30" stroke="#042C53" stroke-width="0.8"/>
+      <rect x="10" y="10" width="5" height="4" rx="1" fill="#B5D4F4" opacity="0.85"/>
+      <rect x="17" y="10" width="5" height="4" rx="1" fill="#B5D4F4" opacity="0.85"/>
+      <circle cx="11" cy="24" r="2.5" fill="#042C53"/>
+      <circle cx="21" cy="24" r="2.5" fill="#042C53"/>
+      <circle cx="11" cy="24" r="1" fill="#B5D4F4"/>
+      <circle cx="21" cy="24" r="1" fill="#B5D4F4"/>
+      <rect x="5" y="15" width="2" height="3" rx="0.5" fill="#FFD93D"/>
+      <rect x="25" y="15" width="2" height="3" rx="0.5" fill="#FF6B6B"/>
+    </svg>
+  </div>`,
+  className: 'custom-pin',
+  iconSize: [32, 32],
+  iconAnchor: [16, 16]
+});
+
+let carPos = [...cities.jaffna.coords];
+let carHeading = 0;
+const carMarker = L.marker(carPos, { icon: carIcon, zIndexOffset: 1000 }).addTo(map);
+
+const keys = { ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false };
+const SPEED = 0.5;
+const TURN_SPEED = 4;
+let nearestCity = null;
+let modalOpen = false;
+
+function getCarElement() { return document.getElementById('carIcon'); }
+function updateCarRotation() {
+  const el = getCarElement();
+  if (el) el.style.transform = `rotate(${carHeading}deg)`;
+}
+
+function distanceBetween(a, b) {
+  const dy = a[0] - b[0];
+  const dx = a[1] - b[1];
+  return Math.sqrt(dy * dy + dx * dx);
+}
+
+function checkProximity() {
+  let closest = null;
+  let minDist = Infinity;
+  Object.entries(cities).forEach(([key, section]) => {
+    const dist = distanceBetween(carPos, section.coords);
+    if (dist < minDist) {
+      minDist = dist;
+      closest = key;
+    }
+  });
+  Object.keys(cities).forEach(key => {
+    const dot = document.getElementById('pin-' + key);
+    if (dot) dot.classList.remove('near');
+  });
+  const hint = document.getElementById('hint');
+  const hintCity = document.getElementById('hintCity');
+  if (closest && minDist < 4) {
+    nearestCity = closest;
+    const dot = document.getElementById('pin-' + closest);
+    if (dot) dot.classList.add('near');
+    hintCity.textContent = cities[closest].city;
+    hint.classList.add('visible');
+  } else {
+    nearestCity = null;
+    hint.classList.remove('visible');
+  }
+}
+
+function gameLoop() {
+  let moved = false;
+  if (keys.ArrowLeft) { carHeading -= TURN_SPEED; moved = true; }
+  if (keys.ArrowRight) { carHeading += TURN_SPEED; moved = true; }
+  if (keys.ArrowUp || keys.ArrowDown) {
+    const direction = keys.ArrowUp ? 1 : -1;
+    const rad = (carHeading - 90) * Math.PI / 180;
+    carPos[0] -= Math.sin(rad) * SPEED * direction;
+    carPos[1] += Math.cos(rad) * SPEED * direction;
+    carPos[0] = Math.max(-80, Math.min(80, carPos[0]));
+    carPos[1] = Math.max(-180, Math.min(180, carPos[1]));
+    carMarker.setLatLng(carPos);
+    moved = true;
+  }
+  if (keys.ArrowLeft || keys.ArrowRight) updateCarRotation();
+  if (moved) {
+    checkProximity();
+    if (!modalOpen) {
+      const mapBounds = map.getBounds();
+      const carLatLng = L.latLng(carPos[0], carPos[1]);
+      if (!mapBounds.pad(-0.15).contains(carLatLng)) {
+        map.panTo(carPos, { animate: true, duration: 0.3 });
+      }
+    }
+  }
+  requestAnimationFrame(gameLoop);
+}
+
+function openModal(eyebrow, title, content) {
+  const modal = document.getElementById('modal');
+  const overlay = document.getElementById('overlay');
+  const contentEl = document.getElementById('modalContent');
+  contentEl.innerHTML = `
+    <div class="modal-eyebrow">${eyebrow}</div>
+    <h2 class="modal-title">${title}</h2>
+    <div class="modal-body">${content}</div>
+  `;
+  modal.classList.add('active');
+  overlay.classList.add('active');
+  modalOpen = true;
+}
+
+function openCity(key) {
+  const section = cities[key];
+  openModal(section.eyebrow, section.title, section.content);
+}
+
+function openMenuItem(key) {
+  const item = menuContent[key];
+  if (item) openModal(item.eyebrow, item.title, item.content);
+}
+
+function closeSection() {
+  document.getElementById('modal').classList.remove('active');
+  document.getElementById('overlay').classList.remove('active');
+  modalOpen = false;
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') { closeSection(); return; }
+  if (modalOpen) return;
+  if (e.key === 'Enter' && nearestCity) {
+    e.preventDefault();
+    openCity(nearestCity);
+    return;
+  }
+  if (keys.hasOwnProperty(e.key)) {
+    e.preventDefault();
+    keys[e.key] = true;
+  }
+});
+
+document.addEventListener('keyup', (e) => {
+  if (keys.hasOwnProperty(e.key)) {
+    e.preventDefault();
+    keys[e.key] = false;
+  }
+});
+
+document.querySelectorAll('.mobile-btn').forEach(btn => {
+  const key = btn.dataset.key;
+  const start = (e) => {
+    e.preventDefault();
+    if (key === 'Enter') {
+      if (nearestCity && !modalOpen) openCity(nearestCity);
+    } else if (keys.hasOwnProperty(key)) {
+      keys[key] = true;
+    }
+  };
+  const end = (e) => {
+    e.preventDefault();
+    if (keys.hasOwnProperty(key)) keys[key] = false;
+  };
+  btn.addEventListener('touchstart', start, { passive: false });
+  btn.addEventListener('touchend', end, { passive: false });
+  btn.addEventListener('mousedown', start);
+  btn.addEventListener('mouseup', end);
+  btn.addEventListener('mouseleave', end);
+});
+
+document.querySelectorAll('.menu-item').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const key = btn.dataset.content;
+    if (key) openMenuItem(key);
+  });
+});
+
+document.getElementById('closeBtn').addEventListener('click', closeSection);
+document.getElementById('overlay').addEventListener('click', closeSection);
+
+setTimeout(() => updateCarRotation(), 100);
+gameLoop();
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', bootApp);
+} else {
+  bootApp();
+}
+</script>
+
+</body>
+</html>
